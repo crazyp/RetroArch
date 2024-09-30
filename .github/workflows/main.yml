@@ -1,0 +1,16 @@
+pushd libretro-super
+    git up
+    ./libretro-fetch.sh
+    ./libretro-build-ios-arm64.sh snes9x2010 fceumm pcsx_rearmed \
+        mednafen_{gba,snes} bsnes mgba genesis_plus_gx handy hatari \
+        nestopia stella
+    codesign -fs "$SIGNING_IDENTITY" dist/ios-arm64/*.dylib
+    cp dist/ios-arm64/*.dylib ~/dev/retroarch/retroarch/pkg/apple/iOS/modules
+popd
+
+pushd retroarch
+    git up
+    xcodebuild -scheme RetroArchiOS11 -configuration Release -project pkg/apple/RetroArch_iOS11.xcodeproj/ -destination generic/platform=iOS archive -archivePath build/RetroArchiOS11.xcarchive || echo 'Use Xcode to archive this project.' >&2
+    xcodebuild -allowProvisioningUpdates -exportArchive -archivePath build/RetroArchiOS11.xcarchive -exportOptionsPlist ../export-options.plist -exportPath ~/Downloads/
+    rm -f ~/Downloads/Packaging.log ~/Downloads/ExportOptions.plist ~/Downloads/DistributionSummary.plist
+popd
